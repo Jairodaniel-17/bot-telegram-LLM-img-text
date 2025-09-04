@@ -116,6 +116,8 @@ La configuración de tests usa SQLite en memoria y mocks para clientes LLM exter
 ### Uso en Telegram
 Una vez iniciado el bot:
 - Envía `/start` para ver la ayuda y el menú.
+- Envía `/help` para ver modelos recomendados y proveedores compatibles.
+- **Configura paso a paso** con `/test_config` para ver qué falta configurar.
 - Configura tus credenciales y preferencias con los comandos:
   - `/set_api_key <tu_api_key>`
   - `/set_base_url <https://tu.base.url/v1>`
@@ -123,7 +125,17 @@ Una vez iniciado el bot:
   - `/set_system_prompt <mensaje>`
   - `/config_status` para ver el estado actual
 
+**Ejemplo de configuración completa:**
+```
+1. /set_api_key sk-1234567890abcdef
+2. /set_base_url https://api.openai.com/v1
+3. /set_model gpt-4-turbo
+4. /test_config (para verificar)
+```
+
 Luego, envía mensajes de texto y/o fotos. Si envías una foto, el bot usará el flujo multimodal. Si no incluyes texto con la foto, el bot usará por defecto: "Describe la imagen".
+
+**Nota**: Si recibes errores 404, usa `/help` para ver modelos disponibles y verifica que tu proveedor soporte el modelo seleccionado.
 
 ---
 

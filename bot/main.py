@@ -22,6 +22,8 @@ try:
         set_model,
         set_system_prompt,
         config_status,
+        help_command,
+        test_config,
     )
     from bot.handlers.messages import handle_message
     from bot.handlers.callbacks import handle_button
@@ -36,6 +38,8 @@ except ImportError:
         set_model,
         set_system_prompt,
         config_status,
+        help_command,
+        test_config,
     )
     from .handlers.messages import handle_message
     from .handlers.callbacks import handle_button
@@ -45,6 +49,7 @@ except ImportError:
 # Comandos del bot
 BOT_COMMANDS = [
     BotCommand("start", "Inicia el bot y muestra el menú"),
+    BotCommand("help", "Muestra la ayuda y los comandos disponibles"),
     BotCommand("set_api_key", "Configura tu API Key de OpenAI"),
     BotCommand("set_base_url", "Configura la URL base de la API"),
     BotCommand("set_model", "Configura el modelo de IA a usar"),
@@ -79,11 +84,13 @@ def register_handlers(application: Application) -> None:
     """
     handlers = [
         CommandHandler("start", start),
+        CommandHandler("help", help_command),
         CommandHandler("set_api_key", set_api_key),
         CommandHandler("set_base_url", set_base_url),
         CommandHandler("set_model", set_model),
         CommandHandler("set_system_prompt", set_system_prompt),
         CommandHandler("config_status", config_status),
+        CommandHandler("test_config", test_config),
         CallbackQueryHandler(handle_button),
         MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message),
         MessageHandler(filters.PHOTO, handle_message),  # Manejo de imágenes

@@ -63,11 +63,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         config = get_user_config(user_id)
 
         # Validar configuración
-        if not config or not config.get("api_key") or not config.get("model_name"):
+        if not config or not config.get("api_key") or not config.get("model_name") or not config.get("base_url"):
             await update.message.reply_text(
                 "⚠️ Configuración incompleta. Necesitas:\n"
-                "1. Establecer API key con /set_api_key\n"
-                "2. Elegir modelo con /set_model"
+                "1. Establecer API key con `/set_api_key sk-1234567890abcdef`\n"
+                "2. Elegir modelo con /set_model\n"
+                "3. Establecer Base URL con /set_base_url"
             )
             return
 
@@ -144,13 +145,23 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     except Exception as e:
-        logger.error(f"Error en handle_message: {str(e)}", exc_info=True)
+        # Fix logging error by using simple string formatting
+        logger.error("Error en handle_message: {}", str(e), exc_info=True)
 
         # Limpieza en caso de error
         if image_path and os.path.exists(image_path):
             await cleanup_temp_file(image_path)
 
-        error_msg = "⚠️ Ocurrió un error al procesar tu solicitud. Intenta nuevamente."
+        # Provide more specific error messages based on error type
+        if "404" in str(e) or "No endpoints found" in str(e):
+            error_msg = "⚠️ El modelo configurado no está disponible. Verifica tu configuración con /config_status y ajusta el modelo con /set_model."
+        elif "401" in str(e) or "Unauthorized" in str(e):
+            error_msg = "⚠️ Error de autenticación. Verifica tu API key con /set_api_key."
+        elif "rate limit" in str(e).lower() or "429" in str(e):
+            error_msg = "⚠️ Límite de velocidad excedido. Inténtalo de nuevo en unos minutos."
+        else:
+            error_msg = "⚠️ Ocurrió un error al procesar tu solicitud. Intenta nuevamente."
+        
         if update.message:
             await update.message.reply_text(error_msg)
 
@@ -186,11 +197,11 @@ async def download_photo(photo: PhotoSize, bot) -> Optional[str]:
         # Descargar archivo
         await file.download_to_drive(custom_path=file_path)
 
-        logger.info(f"Imagen descargada correctamente en: {file_path}")
+        logger.info("Imagen descargada correctamente en: {}", file_path)
         return file_path
 
     except Exception as e:
-        logger.error(f"Error al descargar foto: {str(e)}", exc_info=True)
+        logger.error("Error al descargar foto: {}", str(e), exc_info=True)
         return None
 
 

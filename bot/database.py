@@ -83,6 +83,12 @@ def get_user_config(user_id: int) -> Dict[str, Optional[str]]:
         conn.row_factory = sqlite3.Row  # Para acceso como diccionario
         cursor = conn.cursor()
 
+        # Verificar que la tabla existe
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='user_config'")
+        if not cursor.fetchone():
+            logger.warning(f"Tabla user_config no existe en {DB_PATH}")
+            return {}
+
         cursor.execute(
             "SELECT api_key, base_url, model_name, system_prompt "
             "FROM user_config WHERE user_id = ?",
@@ -90,10 +96,16 @@ def get_user_config(user_id: int) -> Dict[str, Optional[str]]:
         )
 
         row = cursor.fetchone()
-        return dict(row) if row else {}
+        if row:
+            config = dict(row)
+            logger.info(f"Configuración obtenida para usuario {user_id}: {config}")
+            return config
+        else:
+            logger.info(f"No se encontró configuración para usuario {user_id}")
+            return {}
 
     except Exception as e:
-        logger.error(f"Error al obtener configuración: {str(e)}")
+        logger.error(f"Error al obtener configuración para usuario {user_id}: {str(e)}", exc_info=True)
         return {}
     finally:
         conn.close()
