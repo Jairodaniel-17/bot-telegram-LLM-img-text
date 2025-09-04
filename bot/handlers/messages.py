@@ -6,8 +6,32 @@ from loguru import logger
 import os
 import tempfile
 from typing import Optional
+from bot.security import (
+    CompositeGuard,
+    RateLimitGuard,
+    MessageLengthGuard,
+    ImageSizeGuard,
+)
+from bot.security import (
+    CompositeSanitizer,
+    TrimSanitizer,
+    ControlCharsSanitizer,
+)
 
 # El logger se importa desde config.py y ya está configurado con loguru
+
+
+_message_guard = CompositeGuard(
+    RateLimitGuard(max_requests=6, window_seconds=10),
+    MessageLengthGuard(max_chars=4000),
+    ImageSizeGuard(max_bytes=5 * 1024 * 1024),
+)
+
+_sanitizer = CompositeSanitizer(
+    TrimSanitizer(),
+    ControlCharsSanitizer(),
+    # No escapar aquí si el modelo no requiere Markdown; mantenemos el texto limpio por seguridad básica
+)
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -45,10 +69,32 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         # Obtener texto de entrada (puede ser None si solo envía imagen)
         user_input = update.message.text or ""
+        user_input = _sanitizer.sanitize(user_input)
 
         # Manejar imagen si está presente
+        image_size_bytes = None
         if update.message.photo:
-            image_path = await download_photo(update.message.photo[-1], context.bot)
+            # Validación de tamaño antes de descargar
+            last_photo = update.message.photo[-1]
+            try:
+                image_size_bytes = getattr(last_photo, "file_size", None)
+            except Exception:
+                image_size_bytes = None
+
+            # Pasar por guardias de seguridad
+            violation = _message_guard.check(
+                {
+                    "user_id": user_id,
+                    "text": user_input,
+                    "image_size_bytes": image_size_bytes,
+                    "is_command": False,
+                }
+            )
+            if violation:
+                await update.message.reply_text(violation)
+                return
+
+            image_path = await download_photo(last_photo, context.bot)
             if not image_path:
                 await update.message.reply_text("⚠️ No pude procesar la imagen adjunta")
                 return
@@ -57,6 +103,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 user_input = (
                     "Describe la imagen"  # Texto por defecto si solo envía imagen
                 )
+
+        # Pasar por guardias para mensajes solo de texto
+        if not update.message.photo:
+            violation = _message_guard.check(
+                {
+                    "user_id": user_id,
+                    "text": user_input,
+                    "image_size_bytes": image_size_bytes,
+                    "is_command": False,
+                }
+            )
+            if violation:
+                await update.message.reply_text(violation)
+                return
 
         # Notificar al usuario que se está procesando
         processing_msg = await update.message.reply_text(

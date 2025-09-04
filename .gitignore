@@ -10,3 +10,8 @@ __pycache__/
 *.pywz
 *.pyzw
 *.log
+.venv/
+.ruff_cache/
+.pytest_cache/
+.ruff_cache/
+.ruff_cache/
