@@ -3,6 +3,13 @@ from telegram.ext import ContextTypes
 from loguru import logger
 import re
 
+# Use relative imports when running as module, absolute when running directly
+try:
+    from bot.database import set_user_config, get_user_config
+except ImportError:
+    # Fallback to relative imports when running as module
+    from ..database import set_user_config, get_user_config
+
 # El logger se importa desde config.py y ya está configurado con loguru
 
 
@@ -56,8 +63,6 @@ async def set_api_key(update: Update, context: ContextTypes.DEFAULT_TYPE):
         api_key = context.args[0].strip()
         user_id = update.effective_user.id
 
-        from bot.database import set_user_config
-
         if set_user_config(user_id, "api_key", api_key):
             await update.message.reply_text(
                 escape_markdown("✅ API Key guardada correctamente"),
@@ -85,8 +90,6 @@ async def set_base_url(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         base_url = context.args[0].strip()
         user_id = update.effective_user.id
-
-        from bot.database import set_user_config
 
         if set_user_config(user_id, "base_url", base_url):
             await update.message.reply_text(
@@ -116,8 +119,6 @@ async def set_model(update: Update, context: ContextTypes.DEFAULT_TYPE):
         model_name = context.args[0].strip()
         user_id = update.effective_user.id
 
-        from bot.database import set_user_config
-
         if set_user_config(user_id, "model_name", model_name):
             await update.message.reply_text(
                 escape_markdown(f"✅ Modelo {model_name} guardado correctamente"),
@@ -146,8 +147,6 @@ async def set_system_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
         prompt = " ".join(context.args).strip()
         user_id = update.effective_user.id
 
-        from bot.database import set_user_config
-
         if set_user_config(user_id, "system_prompt", prompt):
             await update.message.reply_text(
                 escape_markdown("✅ System Prompt guardado correctamente"),
@@ -167,8 +166,6 @@ async def set_system_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def config_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         user_id = update.effective_user.id
-        from bot.database import get_user_config
-
         config = get_user_config(user_id)
 
         if not config:

@@ -1,7 +1,15 @@
 from telegram import Update, PhotoSize
 from telegram.ext import ContextTypes
-from bot.database import get_user_config
-from core.pipeline import run_pipeline
+
+# Use relative imports when running as module, absolute when running directly
+try:
+    from bot.database import get_user_config
+    from core.pipeline import run_pipeline
+except ImportError:
+    # Fallback to relative imports when running as module
+    from ..database import get_user_config
+    from ...core.pipeline import run_pipeline
+
 from loguru import logger
 import os
 import tempfile
@@ -12,11 +20,7 @@ from bot.security import (
     MessageLengthGuard,
     ImageSizeGuard,
 )
-from bot.security import (
-    CompositeSanitizer,
-    TrimSanitizer,
-    ControlCharsSanitizer,
-)
+from bot.security import CompositeSanitizer, MarkdownEscapeSanitizer, TrimSanitizer, ControlCharsSanitizer
 
 # El logger se importa desde config.py y ya está configurado con loguru
 

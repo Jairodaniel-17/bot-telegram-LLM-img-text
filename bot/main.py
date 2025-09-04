@@ -11,18 +11,34 @@ from loguru import logger
 import signal
 import sys
 
-from bot.config import TELEGRAM_TOKEN
-from bot.database import init_db, close_db
-from bot.handlers.commands import (
-    start,
-    set_api_key,
-    set_base_url,
-    set_model,
-    set_system_prompt,
-    config_status,
-)
-from bot.handlers.messages import handle_message
-from bot.handlers.callbacks import handle_button
+# Use relative imports when running as module, absolute when running directly
+try:
+    from bot.config import TELEGRAM_TOKEN
+    from bot.database import init_db, close_db
+    from bot.handlers.commands import (
+        start,
+        set_api_key,
+        set_base_url,
+        set_model,
+        set_system_prompt,
+        config_status,
+    )
+    from bot.handlers.messages import handle_message
+    from bot.handlers.callbacks import handle_button
+except ImportError:
+    # Fallback to relative imports when running as module
+    from .config import TELEGRAM_TOKEN
+    from .database import init_db, close_db
+    from .handlers.commands import (
+        start,
+        set_api_key,
+        set_base_url,
+        set_model,
+        set_system_prompt,
+        config_status,
+    )
+    from .handlers.messages import handle_message
+    from .handlers.callbacks import handle_button
 
 # El logger se importa desde config.py y ya está configurado con loguru
 
@@ -112,11 +128,10 @@ def main() -> None:
         logger.info("🤖 Bot iniciado y listo para recibir mensajes")
         print("Bot iniciado correctamente. Presiona Ctrl+C para detenerlo.")
 
-        # Iniciar el bot
+        # Iniciar el bot - Fixed for python-telegram-bot 20.x compatibility
         application.run_polling(
             drop_pending_updates=True,
             allowed_updates=Update.ALL_TYPES,
-            close_loop=False,
         )
 
     except Exception as e:

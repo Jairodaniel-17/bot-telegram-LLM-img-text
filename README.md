@@ -80,13 +80,18 @@ pip install -r requirements.txt
 
 3) Ejecuta el bot:
 ```powershell
-python bot/main.py
+# Opción 1: Usar el launcher desde la raíz del proyecto
+python run_bot.py
+
+# Opción 2: Ejecutar como módulo
+python -m bot.main
+
+# Opción 3: Ejecutar desde el directorio bot (no recomendado)
+cd bot
+python main.py
 ```
 
-Si prefieres módulo:
-```powershell
-python -m bot.main
-```
+**Nota**: Se recomienda usar `python run_bot.py` desde la raíz del proyecto para evitar problemas de importación.
 
 El bot iniciará polling y mostrará logs en consola y en `bot.log`.
 
